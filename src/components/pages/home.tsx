@@ -13,7 +13,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../supabase/auth";
 
 export default function LandingPage() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isGuest } = useAuth();
 
   const navigate = useNavigate();
 

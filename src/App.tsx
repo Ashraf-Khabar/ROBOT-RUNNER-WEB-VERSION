@@ -17,10 +17,7 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
     return <LoadingScreen text="Authenticating..." />;
   }
 
-  if (!user) {
-    return <Navigate to="/" />;
-  }
-
+  // Allow access without authentication (guest mode)
   return <>{children}</>;
 }
 
@@ -39,12 +36,7 @@ function AppRoutes() {
             </PrivateRoute>
           }
         />
-        <Route
-          path="/success"
-          element={
-            <Success />
-          }
-        />
+        <Route path="/success" element={<Success />} />
       </Routes>
       {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
     </>
