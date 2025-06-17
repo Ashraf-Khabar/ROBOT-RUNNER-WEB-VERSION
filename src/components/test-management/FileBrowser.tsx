@@ -384,7 +384,7 @@ const FileBrowser = ({
       </CardHeader>
       <CardContent className="p-0">
         <div
-          className="h-80 border-2 border-dashed border-transparent transition-colors"
+          className={`${className.includes("h-") ? "" : "h-80"} border-2 border-dashed border-transparent transition-colors relative`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}

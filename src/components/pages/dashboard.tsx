@@ -116,7 +116,7 @@ const Home = () => {
 
         {/* Side Panels */}
         {(showTerminal || showFileBrowser) && (
-          <div className="w-96 border-l bg-background/95 backdrop-blur-sm">
+          <div className="w-[480px] border-l bg-background/95 backdrop-blur-sm">
             <div className="h-full flex flex-col">
               <div className="flex items-center justify-between p-4 border-b">
                 <h3 className="font-medium">
@@ -137,20 +137,33 @@ const Home = () => {
                   <X className="h-4 w-4" />
                 </Button>
               </div>
-              <div className="flex-1 overflow-auto p-4 space-y-4">
-                {showFileBrowser && (
+              <div className="flex-1 overflow-auto p-4">
+                {showTerminal && showFileBrowser ? (
+                  <div className="space-y-4">
+                    <FileBrowser
+                      onFileSelect={handleFileSelect}
+                      onTestRun={handleTestRun}
+                      onOutputDirSelect={handleOutputDirSelect}
+                      className="h-64"
+                    />
+                    <Terminal
+                      onCommandExecute={handleCommandExecute}
+                      onTestComplete={handleTestComplete}
+                      className="h-64"
+                    />
+                  </div>
+                ) : showFileBrowser ? (
                   <FileBrowser
                     onFileSelect={handleFileSelect}
                     onTestRun={handleTestRun}
                     onOutputDirSelect={handleOutputDirSelect}
-                    className="h-80"
+                    className="h-full"
                   />
-                )}
-                {showTerminal && (
+                ) : (
                   <Terminal
                     onCommandExecute={handleCommandExecute}
                     onTestComplete={handleTestComplete}
-                    className="h-80"
+                    className="h-full"
                   />
                 )}
               </div>

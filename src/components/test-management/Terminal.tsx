@@ -235,16 +235,24 @@ const Terminal = ({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-0">
-        <ScrollArea className="h-80 px-4" ref={scrollAreaRef}>
+      <CardContent
+        className="p-0 flex flex-col"
+        style={{
+          height: className.includes("h-") ? "calc(100% - 80px)" : "auto",
+        }}
+      >
+        <ScrollArea
+          className={`${className.includes("h-") ? "flex-1" : "h-80"} px-4`}
+          ref={scrollAreaRef}
+        >
           <div className="space-y-1 pb-4">
             {output.map((line) => (
               <div key={line.id} className="flex items-start gap-2">
-                <span className="text-green-600 text-xs mt-1">
+                <span className="text-green-600 text-xs mt-1 flex-shrink-0">
                   {line.timestamp.toLocaleTimeString()}
                 </span>
                 <pre
-                  className={`text-sm whitespace-pre-wrap flex-1 ${
+                  className={`text-sm whitespace-pre-wrap flex-1 break-words ${
                     line.type === "command"
                       ? "text-yellow-400 font-bold"
                       : line.type === "error"
@@ -264,23 +272,23 @@ const Terminal = ({
             )}
           </div>
         </ScrollArea>
-        <div className="border-t border-green-500/30 p-4">
+        <div className="border-t border-green-500/30 p-4 flex-shrink-0">
           <div className="flex items-center gap-2">
-            <span className="text-green-400">$</span>
+            <span className="text-green-400 flex-shrink-0">$</span>
             <Input
               ref={inputRef}
               value={command}
               onChange={(e) => setCommand(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Enter Robot Framework commands..."
-              className="bg-transparent border-green-500/30 text-green-400 placeholder-green-600 focus:border-green-400"
+              className="bg-transparent border-green-500/30 text-green-400 placeholder-green-600 focus:border-green-400 flex-1 min-w-0"
               disabled={isRunning}
             />
             <Button
               size="sm"
               onClick={() => executeCommand(command)}
               disabled={isRunning || !command.trim()}
-              className="bg-green-600 hover:bg-green-700 text-black"
+              className="bg-green-600 hover:bg-green-700 text-black flex-shrink-0"
             >
               <Play className="h-4 w-4" />
             </Button>

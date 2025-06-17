@@ -15,7 +15,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-  Bell,
   Home,
   Search,
   Settings,
@@ -34,7 +33,6 @@ import { useTheme } from "../../../hooks/useTheme";
 
 interface TopNavigationProps {
   onSearch?: (query: string) => void;
-  notifications?: Array<{ id: string; title: string }>;
   onTerminalToggle?: () => void;
   onFileBrowserToggle?: () => void;
   onDashboardView?: () => void;
@@ -44,10 +42,6 @@ interface TopNavigationProps {
 
 const TopNavigation = ({
   onSearch = () => {},
-  notifications = [
-    { id: "1", title: "Test execution completed" },
-    { id: "2", title: "New test results available" },
-  ],
   onTerminalToggle = () => {},
   onFileBrowserToggle = () => {},
   onDashboardView = () => {},
@@ -215,50 +209,6 @@ const TopNavigation = ({
           </Tooltip>
         </TooltipProvider>
 
-        {/* Notifications */}
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="relative h-9 w-9 hover:bg-accent"
-                  >
-                    <Bell className="h-4 w-4" />
-                    {notifications.length > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-medium border border-background">
-                        {notifications.length}
-                      </span>
-                    )}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="rounded-xl overflow-hidden p-2 shadow-lg"
-                >
-                  <DropdownMenuLabel className="text-sm font-medium px-2">
-                    Test Notifications
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator className="my-1" />
-                  {notifications.map((notification) => (
-                    <DropdownMenuItem
-                      key={notification.id}
-                      className="rounded-lg text-sm py-2"
-                    >
-                      {notification.title}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Notifications</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-
         {/* Settings */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -275,9 +225,11 @@ const TopNavigation = ({
               Settings
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer">
-              <User className="mr-2 h-4 w-4" />
-              Preferences
+            <DropdownMenuItem className="cursor-pointer" asChild>
+              <Link to="/settings">
+                <User className="mr-2 h-4 w-4" />
+                Preferences
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem className="cursor-pointer">
               <Settings className="mr-2 h-4 w-4" />
