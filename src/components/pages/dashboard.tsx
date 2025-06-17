@@ -24,16 +24,42 @@ const Home = () => {
 
   const handleCommandExecute = (command: string) => {
     console.log("Executing command:", command);
-    // Here you would integrate with actual terminal execution
+    // Save command history to cookies
+    const history = getCookie("rf-command-history");
+    const commandHistory = history ? JSON.parse(history) : [];
+    commandHistory.push({ command, timestamp: new Date().toISOString() });
+    // Keep only last 20 commands
+    const recentHistory = commandHistory.slice(-20);
+    setCookie("rf-command-history", JSON.stringify(recentHistory), 30);
   };
 
   const handleFileSelect = (file: any) => {
     console.log("File selected:", file);
+    setCookie("rf-selected-file", JSON.stringify(file), 7);
   };
 
-  const handleTestRun = (file: any) => {
-    console.log("Running test:", file);
+  const handleTestRun = (file: any, outputDir?: string) => {
+    console.log("Running test:", file, "Output dir:", outputDir);
     setShowTerminal(true);
+
+    // Save test run info to cookies
+    const testRunInfo = {
+      file: file,
+      outputDir: outputDir,
+      timestamp: new Date().toISOString(),
+    };
+    setCookie("rf-current-test-run", JSON.stringify(testRunInfo), 1);
+  };
+
+  const handleOutputDirSelect = (dir: string) => {
+    console.log("Output directory selected:", dir);
+    setCookie("rf-output-directory", dir, 30);
+  };
+
+  const handleTestComplete = (results: any) => {
+    console.log("Test completed:", results);
+    // Update dashboard with new results
+    setCookie("rf-last-test-results", JSON.stringify(results), 30);
   };
 
   const handleExportResults = () => {
@@ -116,12 +142,14 @@ const Home = () => {
                   <FileBrowser
                     onFileSelect={handleFileSelect}
                     onTestRun={handleTestRun}
+                    onOutputDirSelect={handleOutputDirSelect}
                     className="h-80"
                   />
                 )}
                 {showTerminal && (
                   <Terminal
                     onCommandExecute={handleCommandExecute}
+                    onTestComplete={handleTestComplete}
                     className="h-80"
                   />
                 )}
@@ -133,5 +161,23 @@ const Home = () => {
     </div>
   );
 };
+
+// Cookie utility functions
+function setCookie(name: string, value: string, days: number) {
+  const expires = new Date();
+  expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+  document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+}
+
+function getCookie(name: string): string | null {
+  const nameEQ = name + "=";
+  const ca = document.cookie.split(";");
+  for (let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === " ") c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+  }
+  return null;
+}
 
 export default Home;

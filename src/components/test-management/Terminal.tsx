@@ -14,28 +14,45 @@ interface TerminalOutput {
 
 interface TerminalProps {
   onCommandExecute?: (command: string) => void;
+  onTestComplete?: (results: any) => void;
   className?: string;
 }
 
 const Terminal = ({
   onCommandExecute = () => {},
+  onTestComplete = () => {},
   className = "",
 }: TerminalProps) => {
   const [command, setCommand] = useState("");
-  const [output, setOutput] = useState<TerminalOutput[]>([
-    {
-      id: "1",
-      text: "Robot Framework Test Terminal - Ready",
-      type: "output",
-      timestamp: new Date(),
-    },
-    {
-      id: "2",
-      text: "Type 'robot --help' for Robot Framework commands",
-      type: "output",
-      timestamp: new Date(),
-    },
-  ]);
+  const [output, setOutput] = useState<TerminalOutput[]>(() => {
+    // Load previous session from cookies
+    const savedOutput = getCookie("rf-terminal-history");
+    if (savedOutput) {
+      try {
+        const parsed = JSON.parse(savedOutput);
+        return parsed.map((item: any) => ({
+          ...item,
+          timestamp: new Date(item.timestamp),
+        }));
+      } catch (e) {
+        console.error("Failed to parse terminal history:", e);
+      }
+    }
+    return [
+      {
+        id: "1",
+        text: "Robot Framework Test Terminal - Ready",
+        type: "output",
+        timestamp: new Date(),
+      },
+      {
+        id: "2",
+        text: "Type 'robot --help' for Robot Framework commands or upload .robot files",
+        type: "output",
+        timestamp: new Date(),
+      },
+    ];
+  });
   const [isRunning, setIsRunning] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -57,42 +74,104 @@ const Terminal = ({
       timestamp: new Date(),
     };
 
-    setOutput((prev) => [...prev, newOutput]);
+    setOutput((prev) => {
+      const updated = [...prev, newOutput];
+      // Save to cookies (keep last 50 entries)
+      const toSave = updated.slice(-50);
+      setCookie("rf-terminal-history", JSON.stringify(toSave), 7);
+      return updated;
+    });
     setIsRunning(true);
     onCommandExecute(cmd);
 
-    // Simulate command execution
+    // Enhanced command execution simulation
     setTimeout(
       () => {
         const resultOutput: TerminalOutput = {
           id: (Date.now() + 1).toString(),
           text: simulateCommandOutput(cmd),
-          type: cmd.includes("robot") ? "output" : "output",
+          type:
+            cmd.includes("robot") &&
+            !cmd.includes("--help") &&
+            !cmd.includes("--version")
+              ? "output"
+              : "output",
           timestamp: new Date(),
         };
-        setOutput((prev) => [...prev, resultOutput]);
+
+        setOutput((prev) => {
+          const updated = [...prev, resultOutput];
+          // Save to cookies
+          const toSave = updated.slice(-50);
+          setCookie("rf-terminal-history", JSON.stringify(toSave), 7);
+          return updated;
+        });
+
+        // If it's a robot test command, trigger test completion callback
+        if (
+          cmd.includes("robot") &&
+          !cmd.includes("--help") &&
+          !cmd.includes("--version")
+        ) {
+          const testResults = {
+            command: cmd,
+            timestamp: new Date(),
+            success: Math.random() > 0.3, // 70% success rate simulation
+            duration: `${Math.floor(Math.random() * 180 + 30)}s`,
+            testsRun: Math.floor(Math.random() * 10 + 1),
+            testsPassed: Math.floor(Math.random() * 8 + 1),
+            testsFailed: Math.floor(Math.random() * 3),
+          };
+          onTestComplete(testResults);
+          setCookie("rf-last-test-results", JSON.stringify(testResults), 30);
+        }
+
         setIsRunning(false);
       },
-      1000 + Math.random() * 2000,
+      1000 + Math.random() * 3000,
     );
 
     setCommand("");
   };
 
   const simulateCommandOutput = (cmd: string): string => {
-    if (cmd.includes("robot --version") || cmd.includes("robot --help")) {
-      return "Robot Framework 6.1.1 (Python 3.11.0 on win32)";
+    if (cmd.includes("robot --version")) {
+      return "Robot Framework 6.1.1 (Python 3.11.0 on linux)\nSelenium Library 6.2.0\nRequests Library 0.9.7";
     }
-    if (cmd.includes("robot")) {
-      return `==============================================================================\nTest Suite Name\n==============================================================================\nTest Case 1                                                           | PASS |\n------------------------------------------------------------------------------\nTest Suite Name                                                       | PASS |\n1 test, 1 passed, 0 failed\n==============================================================================\nOutput:  output.xml\nLog:     log.html\nReport:  report.html`;
+    if (cmd.includes("robot --help")) {
+      return `Robot Framework -- A generic automation framework\n\nUsage:  robot [options] data_sources\n\nOptions:\n  -d --outputdir dir       Where to create output files. Default is '.'.\n  -o --output file         XML output file. Default is 'output.xml'.\n  -l --log file           HTML log file. Default is 'log.html'.\n  -r --report file        HTML report file. Default is 'report.html'.\n  -v --variable name:value Set variables from command line.\n  -t --test name          Select tests by name.\n  -s --suite name         Select suites by name.\n  --help                  Show this help.`;
+    }
+    if (cmd.includes("robot") && cmd.includes(".robot")) {
+      const testFile = cmd.match(/([\w-]+\.robot)/)?.[1] || "test.robot";
+      const outputDir = cmd.includes("-d")
+        ? cmd.split("-d")[1]?.trim().split(" ")[0] || "./output"
+        : "./output";
+      const success = Math.random() > 0.2; // 80% success rate
+      const testsRun = Math.floor(Math.random() * 8 + 2);
+      const testsPassed = success ? testsRun : Math.floor(testsRun * 0.7);
+      const testsFailed = testsRun - testsPassed;
+
+      return `==============================================================================\n${testFile.replace(".robot", "")} Test Suite\n==============================================================================\n${Array.from(
+        { length: testsRun },
+        (_, i) =>
+          `Test Case ${i + 1}                                                    | ${i < testsPassed ? "PASS" : "FAIL"} |`,
+      ).join(
+        "\n",
+      )}\n------------------------------------------------------------------------------\n${testFile.replace(".robot", "")} Test Suite                                    | ${success ? "PASS" : "FAIL"} |\n${testsRun} tests, ${testsPassed} passed, ${testsFailed} failed\n==============================================================================\nOutput:  ${outputDir}/output.xml\nLog:     ${outputDir}/log.html\nReport:  ${outputDir}/report.html`;
     }
     if (cmd.includes("pip install robotframework")) {
-      return "Successfully installed robotframework-6.1.1";
+      return "Collecting robotframework\nDownloading robotframework-6.1.1-py3-none-any.whl (678 kB)\nInstalling collected packages: robotframework\nSuccessfully installed robotframework-6.1.1";
+    }
+    if (cmd.includes("pip list") || cmd.includes("pip show")) {
+      return "robotframework==6.1.1\nseleniumlibrary==6.2.0\nrequests==2.31.0\nrequestslibrary==0.9.7";
     }
     if (cmd.includes("ls") || cmd.includes("dir")) {
-      return "test_suite.robot\noutput.xml\nlog.html\nreport.html";
+      return "test_suites/\n  login_tests.robot\n  api_tests.robot\n  ui_tests.robot\nresources/\n  keywords.robot\n  variables.robot\noutput/\n  output.xml\n  log.html\n  report.html";
     }
-    return `Command executed: ${cmd}`;
+    if (cmd.includes("python --version") || cmd.includes("python3 --version")) {
+      return "Python 3.11.0";
+    }
+    return `Command executed: ${cmd}\nResult: Command completed successfully`;
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -102,14 +181,17 @@ const Terminal = ({
   };
 
   const clearTerminal = () => {
-    setOutput([
+    const clearedOutput = [
       {
         id: Date.now().toString(),
-        text: "Terminal cleared",
+        text: "Terminal cleared - Robot Framework Test Terminal Ready",
         type: "output",
         timestamp: new Date(),
       },
-    ]);
+    ];
+    setOutput(clearedOutput);
+    // Clear terminal history from cookies
+    setCookie("rf-terminal-history", JSON.stringify(clearedOutput), 7);
   };
 
   const stopExecution = () => {
@@ -208,5 +290,23 @@ const Terminal = ({
     </Card>
   );
 };
+
+// Cookie utility functions
+function setCookie(name: string, value: string, days: number) {
+  const expires = new Date();
+  expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+  document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+}
+
+function getCookie(name: string): string | null {
+  const nameEQ = name + "=";
+  const ca = document.cookie.split(";");
+  for (let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === " ") c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+  }
+  return null;
+}
 
 export default Terminal;

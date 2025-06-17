@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,8 @@ import {
   FolderOpen,
   FileText,
   Play,
+  Settings,
+  CheckCircle,
 } from "lucide-react";
 
 interface FileItem {
@@ -26,7 +28,8 @@ interface FileItem {
 
 interface FileBrowserProps {
   onFileSelect?: (file: FileItem) => void;
-  onTestRun?: (file: FileItem) => void;
+  onTestRun?: (file: FileItem, outputDir?: string) => void;
+  onOutputDirSelect?: (dir: string) => void;
   className?: string;
 }
 
@@ -124,15 +127,22 @@ const defaultFiles: FileItem[] = [
 const FileBrowser = ({
   onFileSelect = () => {},
   onTestRun = () => {},
+  onOutputDirSelect = () => {},
   className = "",
 }: FileBrowserProps) => {
-  const [files] = useState<FileItem[]>(defaultFiles);
+  const [files, setFiles] = useState<FileItem[]>(defaultFiles);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
     new Set(["1", "5", "8"]),
   );
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [selectedOutputDir, setSelectedOutputDir] = useState<string | null>(
+    null,
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const [dragOver, setDragOver] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<FileList | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
 
   const toggleFolder = (folderId: string) => {
     const newExpanded = new Set(expandedFolders);
@@ -155,7 +165,20 @@ const FileBrowser = ({
 
   const handleTestRun = (file: FileItem, e: React.MouseEvent) => {
     e.stopPropagation();
-    onTestRun(file);
+    if (!selectedOutputDir) {
+      alert("Please select an output directory first");
+      return;
+    }
+    onTestRun(file, selectedOutputDir);
+    // Save to cookies
+    setCookie("rf-last-test-file", file.path, 30);
+    setCookie("rf-output-dir", selectedOutputDir, 30);
+  };
+
+  const handleOutputDirSelect = (dir: string) => {
+    setSelectedOutputDir(dir);
+    onOutputDirSelect(dir);
+    setCookie("rf-output-dir", dir, 30);
   };
 
   const renderFileTree = (items: FileItem[], level = 0) => {
@@ -197,11 +220,30 @@ const FileBrowser = ({
                     variant="ghost"
                     onClick={(e) => handleTestRun(item, e)}
                     className="h-6 w-6 p-0 hover:bg-green-100"
+                    disabled={!selectedOutputDir}
                   >
                     <Play className="h-3 w-3 text-green-600" />
                   </Button>
                 )}
               </div>
+            )}
+            {item.type === "folder" && item.name === "output" && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => handleOutputDirSelect(item.path)}
+                className={`h-6 w-6 p-0 hover:bg-blue-100 ${
+                  selectedOutputDir === item.path ? "bg-blue-100" : ""
+                }`}
+              >
+                <CheckCircle
+                  className={`h-3 w-3 ${
+                    selectedOutputDir === item.path
+                      ? "text-blue-600"
+                      : "text-gray-400"
+                  }`}
+                />
+              </Button>
             )}
           </div>
           {item.type === "folder" &&
@@ -224,8 +266,79 @@ const FileBrowser = ({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
-    // Handle file drop logic here
-    console.log("Files dropped:", e.dataTransfer.files);
+    const droppedFiles = e.dataTransfer.files;
+    handleFileUpload(droppedFiles);
+  };
+
+  const handleFileUpload = (fileList: FileList) => {
+    const robotFiles = Array.from(fileList).filter((file) =>
+      file.name.endsWith(".robot"),
+    );
+
+    if (robotFiles.length === 0) {
+      alert("Please upload .robot files only");
+      return;
+    }
+
+    // Add uploaded files to the file tree
+    const newFiles = robotFiles.map((file, index) => ({
+      id: `uploaded-${Date.now()}-${index}`,
+      name: file.name,
+      type: "file" as const,
+      size: `${(file.size / 1024).toFixed(1)} KB`,
+      modified: new Date().toISOString().split("T")[0],
+      path: `/uploaded/${file.name}`,
+      file: file, // Store the actual file object
+    }));
+
+    // Add to uploaded folder or create one
+    const uploadedFolder = {
+      id: "uploaded-folder",
+      name: "uploaded_tests",
+      type: "folder" as const,
+      path: "/uploaded",
+      children: newFiles,
+    };
+
+    setFiles((prev) => {
+      const existingUploaded = prev.find((f) => f.id === "uploaded-folder");
+      if (existingUploaded) {
+        return prev.map((f) =>
+          f.id === "uploaded-folder"
+            ? { ...f, children: [...(f.children || []), ...newFiles] }
+            : f,
+        );
+      } else {
+        return [uploadedFolder, ...prev];
+      }
+    });
+
+    setExpandedFolders((prev) => new Set([...prev, "uploaded-folder"]));
+    setUploadedFiles(fileList);
+
+    // Save uploaded file names to cookies
+    const fileNames = robotFiles.map((f) => f.name);
+    setCookie("rf-uploaded-files", JSON.stringify(fileNames), 30);
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      handleFileUpload(e.target.files);
+    }
+  };
+
+  const handleFolderSelect = () => {
+    if (folderInputRef.current) {
+      folderInputRef.current.click();
+    }
+  };
+
+  const handleFolderInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const firstFile = e.target.files[0];
+      const folderPath = firstFile.webkitRelativePath.split("/")[0];
+      handleOutputDirSelect(`/output/${folderPath}`);
+    }
   };
 
   return (
@@ -239,8 +352,15 @@ const FileBrowser = ({
             File Browser
           </CardTitle>
           <div className="flex gap-2">
-            <Button size="sm" variant="outline">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+            >
               <Upload className="h-4 w-4" />
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleFolderSelect}>
+              <Settings className="h-4 w-4" />
             </Button>
             <Button size="sm" variant="outline">
               <Download className="h-4 w-4" />
@@ -256,6 +376,11 @@ const FileBrowser = ({
             className="pl-9"
           />
         </div>
+        {selectedOutputDir && (
+          <div className="text-sm text-green-600 mt-2">
+            Output Directory: {selectedOutputDir}
+          </div>
+        )}
       </CardHeader>
       <CardContent className="p-0">
         <div
@@ -276,9 +401,44 @@ const FileBrowser = ({
             </div>
           </div>
         )}
+
+        {/* Hidden file inputs */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept=".robot"
+          onChange={handleFileInputChange}
+          style={{ display: "none" }}
+        />
+        <input
+          ref={folderInputRef}
+          type="file"
+          webkitdirectory=""
+          onChange={handleFolderInputChange}
+          style={{ display: "none" }}
+        />
       </CardContent>
     </Card>
   );
 };
+
+// Cookie utility functions
+function setCookie(name: string, value: string, days: number) {
+  const expires = new Date();
+  expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+  document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+}
+
+function getCookie(name: string): string | null {
+  const nameEQ = name + "=";
+  const ca = document.cookie.split(";");
+  for (let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === " ") c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+  }
+  return null;
+}
 
 export default FileBrowser;
