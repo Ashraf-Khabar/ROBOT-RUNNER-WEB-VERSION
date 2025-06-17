@@ -1,4 +1,3 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,44 +14,208 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Bell, Home, Search, Settings, User } from "lucide-react";
+import {
+  Bell,
+  Home,
+  Search,
+  Settings,
+  User,
+  Sun,
+  Moon,
+  Zap,
+  Terminal,
+  FolderOpen,
+  BarChart3,
+  Download,
+  ExternalLink,
+} from "lucide-react";
 import { Link } from "react-router-dom";
-import { useAuth } from "../../../../supabase/auth";
+import { useTheme } from "../../../hooks/useTheme";
 
 interface TopNavigationProps {
   onSearch?: (query: string) => void;
   notifications?: Array<{ id: string; title: string }>;
+  onTerminalToggle?: () => void;
+  onFileBrowserToggle?: () => void;
+  onDashboardView?: () => void;
+  onExportResults?: () => void;
+  onOpenReports?: () => void;
 }
 
 const TopNavigation = ({
   onSearch = () => {},
   notifications = [
-    { id: "1", title: "New project assigned" },
-    { id: "2", title: "Meeting reminder" },
+    { id: "1", title: "Test execution completed" },
+    { id: "2", title: "New test results available" },
   ],
+  onTerminalToggle = () => {},
+  onFileBrowserToggle = () => {},
+  onDashboardView = () => {},
+  onExportResults = () => {},
+  onOpenReports = () => {},
 }: TopNavigationProps) => {
-  const { user, signOut, isGuest } = useAuth();
+  const { theme, toggleTheme, isLight, isDark, isGreen } = useTheme();
+
+  const getThemeIcon = () => {
+    switch (theme) {
+      case "light":
+        return <Sun className="h-4 w-4" />;
+      case "dark":
+        return <Moon className="h-4 w-4" />;
+      case "green":
+        return <Zap className="h-4 w-4" />;
+      default:
+        return <Sun className="h-4 w-4" />;
+    }
+  };
+
+  const getThemeLabel = () => {
+    switch (theme) {
+      case "light":
+        return "Light Mode";
+      case "dark":
+        return "Dark Mode";
+      case "green":
+        return "Green Mode";
+      default:
+        return "Light Mode";
+    }
+  };
 
   return (
-    <div className="w-full h-16 border-b border-gray-200 bg-white/80 backdrop-blur-md flex items-center justify-between px-6 fixed top-0 z-50 shadow-sm">
+    <div className="w-full h-16 border-b bg-background/80 backdrop-blur-md flex items-center justify-between px-6 fixed top-0 z-50 shadow-sm">
       <div className="flex items-center gap-4 flex-1">
         <Link
           to="/"
-          className="text-gray-900 hover:text-gray-700 transition-colors"
+          className="text-foreground hover:text-muted-foreground transition-colors"
         >
           <Home className="h-5 w-5" />
         </Link>
+        <h1 className="text-lg font-semibold text-foreground">
+          Robot Framework Test Manager
+        </h1>
         <div className="relative w-64">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search projects..."
-            className="pl-9 h-10 rounded-full bg-gray-100 border-0 text-sm focus:ring-2 focus:ring-gray-200 focus-visible:ring-gray-200 focus-visible:ring-offset-0"
+            placeholder="Search tests..."
+            className="pl-9 h-10 rounded-full bg-muted border-0 text-sm focus:ring-2 focus:ring-ring focus-visible:ring-ring focus-visible:ring-offset-0"
             onChange={(e) => onSearch(e.target.value)}
           />
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
+        {/* Test Management Actions */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onDashboardView}
+                className="h-9 w-9 hover:bg-accent"
+              >
+                <BarChart3 className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Dashboard</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onTerminalToggle}
+                className="h-9 w-9 hover:bg-accent"
+              >
+                <Terminal className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Terminal</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onFileBrowserToggle}
+                className="h-9 w-9 hover:bg-accent"
+              >
+                <FolderOpen className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>File Browser</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onExportResults}
+                className="h-9 w-9 hover:bg-accent"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Export Results</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onOpenReports}
+                className="h-9 w-9 hover:bg-accent"
+              >
+                <ExternalLink className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Open Reports</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        {/* Theme Toggle */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleTheme}
+                className="h-9 w-9 hover:bg-accent"
+              >
+                {getThemeIcon()}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{getThemeLabel()}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        {/* Notifications */}
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -61,11 +224,11 @@ const TopNavigation = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="relative rounded-full h-9 w-9 bg-gray-100 hover:bg-gray-200 transition-colors"
+                    className="relative h-9 w-9 hover:bg-accent"
                   >
-                    <Bell className="h-4 w-4 text-gray-700" />
+                    <Bell className="h-4 w-4" />
                     {notifications.length > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-medium border border-white">
+                      <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-medium border border-background">
                         {notifications.length}
                       </span>
                     )}
@@ -73,16 +236,16 @@ const TopNavigation = ({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
-                  className="rounded-xl overflow-hidden p-2 border border-gray-200 shadow-lg"
+                  className="rounded-xl overflow-hidden p-2 shadow-lg"
                 >
-                  <DropdownMenuLabel className="text-sm font-medium text-gray-900 px-2">
-                    Notifications
+                  <DropdownMenuLabel className="text-sm font-medium px-2">
+                    Test Notifications
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator className="my-1 bg-gray-100" />
+                  <DropdownMenuSeparator className="my-1" />
                   {notifications.map((notification) => (
                     <DropdownMenuItem
                       key={notification.id}
-                      className="rounded-lg text-sm py-2 focus:bg-gray-100"
+                      className="rounded-lg text-sm py-2"
                     >
                       {notification.title}
                     </DropdownMenuItem>
@@ -90,59 +253,42 @@ const TopNavigation = ({
                 </DropdownMenuContent>
               </DropdownMenu>
             </TooltipTrigger>
-            <TooltipContent className="rounded-lg bg-gray-900 text-white text-xs px-3 py-1.5">
+            <TooltipContent>
               <p>Notifications</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-        {isGuest ? (
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Guest Mode</span>
-            <Link to="/login">
-              <Button variant="outline" size="sm" className="rounded-full">
-                Sign In
-              </Button>
-            </Link>
-          </div>
-        ) : (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Avatar className="h-8 w-8 hover:cursor-pointer">
-                <AvatarImage
-                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`}
-                  alt={user?.email || ""}
-                />
-                <AvatarFallback>
-                  {user?.email?.[0].toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="rounded-xl border-none shadow-lg"
+
+        {/* Settings */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 hover:bg-accent"
             >
-              <DropdownMenuLabel className="text-xs text-gray-500">
-                {user?.email}
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer">
-                <User className="mr-2 h-4 w-4" />
-                Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onSelect={() => signOut()}
-              >
-                Log out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+              <Settings className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="rounded-xl shadow-lg">
+            <DropdownMenuLabel className="text-sm font-medium">
+              Settings
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="cursor-pointer">
+              <User className="mr-2 h-4 w-4" />
+              Preferences
+            </DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">
+              <Settings className="mr-2 h-4 w-4" />
+              Configuration
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="cursor-pointer">
+              About
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
