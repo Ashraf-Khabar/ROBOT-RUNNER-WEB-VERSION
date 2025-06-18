@@ -343,11 +343,11 @@ const FileBrowser = ({
   };
 
   const handleClearFiles = () => {
-    if (
-      confirm(
-        "Are you sure you want to clear all uploaded files? This action cannot be undone.",
-      )
-    ) {
+    const confirmed = window.confirm(
+      "Are you sure you want to clear all uploaded files? This action cannot be undone.",
+    );
+
+    if (confirmed) {
       // Remove uploaded folder from files
       setFiles((prev) => prev.filter((f) => f.id !== "uploaded-folder"));
       setUploadedFiles(null);

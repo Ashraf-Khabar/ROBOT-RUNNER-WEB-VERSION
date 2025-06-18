@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { Navigate, Route, Routes, useRoutes } from "react-router-dom";
 import routes from "tempo-routes";
 import Dashboard from "./components/pages/dashboard";
@@ -9,6 +9,7 @@ import Terminal from "./components/pages/terminal";
 import FileBrowser from "./components/pages/file-browser";
 import { Toaster } from "./components/ui/toaster";
 import { LoadingScreen } from "./components/ui/loading-spinner";
+import { useTheme } from "./hooks/useTheme";
 
 function AppRoutes() {
   return (
@@ -27,6 +28,15 @@ function AppRoutes() {
 }
 
 function App() {
+  const { theme } = useTheme();
+
+  useEffect(() => {
+    // Apply theme class to document root
+    const root = document.documentElement;
+    root.classList.remove("light", "dark", "green");
+    root.classList.add(theme);
+  }, [theme]);
+
   return (
     <>
       <Suspense
