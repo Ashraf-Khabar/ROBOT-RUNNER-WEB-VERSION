@@ -116,7 +116,7 @@ const Home = () => {
 
         {/* Side Panels */}
         {(showTerminal || showFileBrowser) && (
-          <div className="w-[480px] border-l bg-background/95 backdrop-blur-sm">
+          <div className="w-[600px] border-l bg-background/95 backdrop-blur-sm">
             <div className="h-full flex flex-col">
               <div className="flex items-center justify-between p-4 border-b">
                 <h3 className="font-medium">
@@ -137,34 +137,42 @@ const Home = () => {
                   <X className="h-4 w-4" />
                 </Button>
               </div>
-              <div className="flex-1 overflow-auto p-4">
+              <div className="flex-1 overflow-hidden">
                 {showTerminal && showFileBrowser ? (
-                  <div className="space-y-4">
+                  <div className="h-full flex flex-col">
+                    <div className="flex-1 p-4 pb-2 overflow-hidden">
+                      <FileBrowser
+                        onFileSelect={handleFileSelect}
+                        onTestRun={handleTestRun}
+                        onOutputDirSelect={handleOutputDirSelect}
+                        className="h-full"
+                      />
+                    </div>
+                    <div className="flex-1 p-4 pt-2 overflow-hidden">
+                      <Terminal
+                        onCommandExecute={handleCommandExecute}
+                        onTestComplete={handleTestComplete}
+                        className="h-full"
+                      />
+                    </div>
+                  </div>
+                ) : showFileBrowser ? (
+                  <div className="p-4 h-full overflow-hidden">
                     <FileBrowser
                       onFileSelect={handleFileSelect}
                       onTestRun={handleTestRun}
                       onOutputDirSelect={handleOutputDirSelect}
-                      className="h-64"
+                      className="h-full"
                     />
+                  </div>
+                ) : (
+                  <div className="p-4 h-full overflow-hidden">
                     <Terminal
                       onCommandExecute={handleCommandExecute}
                       onTestComplete={handleTestComplete}
-                      className="h-64"
+                      className="h-full"
                     />
                   </div>
-                ) : showFileBrowser ? (
-                  <FileBrowser
-                    onFileSelect={handleFileSelect}
-                    onTestRun={handleTestRun}
-                    onOutputDirSelect={handleOutputDirSelect}
-                    className="h-full"
-                  />
-                ) : (
-                  <Terminal
-                    onCommandExecute={handleCommandExecute}
-                    onTestComplete={handleTestComplete}
-                    className="h-full"
-                  />
                 )}
               </div>
             </div>
