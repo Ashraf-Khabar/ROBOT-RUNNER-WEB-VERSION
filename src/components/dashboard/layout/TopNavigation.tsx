@@ -124,7 +124,7 @@ const TopNavigation = ({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={onTerminalToggle}
+                onClick={() => (window.location.href = "/terminal")}
                 className="h-9 w-9 hover:bg-accent"
               >
                 <Terminal className="h-4 w-4" />
@@ -142,7 +142,7 @@ const TopNavigation = ({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={onFileBrowserToggle}
+                onClick={() => (window.location.href = "/file-browser")}
                 className="h-9 w-9 hover:bg-accent"
               >
                 <FolderOpen className="h-4 w-4" />

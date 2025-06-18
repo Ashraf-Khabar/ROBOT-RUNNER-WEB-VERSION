@@ -157,6 +157,23 @@ const TestDashboard = ({
             Export to Excel
           </Button>
           <Button
+            variant="outline"
+            onClick={() => {
+              if (confirm("Are you sure you want to clear all test results?")) {
+                // Clear test results from cookies
+                document.cookie =
+                  "rf-last-test-results=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                document.cookie =
+                  "rf-terminal-history=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                window.location.reload();
+              }
+            }}
+            className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+          >
+            <XCircle className="h-4 w-4" />
+            Clear Results
+          </Button>
+          <Button
             onClick={handleRefresh}
             disabled={isRefreshing}
             className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"

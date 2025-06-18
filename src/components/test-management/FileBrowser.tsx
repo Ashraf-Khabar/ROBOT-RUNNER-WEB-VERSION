@@ -14,6 +14,7 @@ import {
   Play,
   Settings,
   CheckCircle,
+  Trash2,
 } from "lucide-react";
 
 interface FileItem {
@@ -341,6 +342,28 @@ const FileBrowser = ({
     }
   };
 
+  const handleClearFiles = () => {
+    if (
+      confirm(
+        "Are you sure you want to clear all uploaded files? This action cannot be undone.",
+      )
+    ) {
+      // Remove uploaded folder from files
+      setFiles((prev) => prev.filter((f) => f.id !== "uploaded-folder"));
+      setUploadedFiles(null);
+      setSelectedFile(null);
+
+      // Clear from cookies
+      setCookie("rf-uploaded-files", JSON.stringify([]), 30);
+      setCookie("rf-selected-file", "", -1); // Delete cookie
+
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
   return (
     <Card
       className={`${className} ${dragOver ? "border-green-400 bg-green-50" : ""}`}
@@ -361,6 +384,14 @@ const FileBrowser = ({
             </Button>
             <Button size="sm" variant="outline" onClick={handleFolderSelect}>
               <Settings className="h-4 w-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleClearFiles()}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4" />
             </Button>
             <Button size="sm" variant="outline">
               <Download className="h-4 w-4" />
@@ -384,12 +415,12 @@ const FileBrowser = ({
       </CardHeader>
       <CardContent className="p-0">
         <div
-          className={`${className.includes("h-") ? "" : "h-80"} border-2 border-dashed border-transparent transition-colors relative`}
+          className={`${className.includes("h-") ? "h-full" : "h-80"} border-2 border-dashed border-transparent transition-colors relative`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
-          <ScrollArea className="h-full px-4">
+          <ScrollArea className="h-full px-4 overflow-y-auto">
             <div className="space-y-1 pb-4">{renderFileTree(files)}</div>
           </ScrollArea>
         </div>

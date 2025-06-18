@@ -10,8 +10,6 @@ import { useTheme } from "../../hooks/useTheme";
 
 const Home = () => {
   const [loading, setLoading] = useState(false);
-  const [showTerminal, setShowTerminal] = useState(false);
-  const [showFileBrowser, setShowFileBrowser] = useState(false);
   const { theme } = useTheme();
 
   // Function to trigger loading state for demonstration
@@ -86,17 +84,11 @@ const Home = () => {
       className={`min-h-screen bg-background transition-colors duration-300`}
     >
       <TopNavigation
-        onTerminalToggle={() => setShowTerminal(!showTerminal)}
-        onFileBrowserToggle={() => setShowFileBrowser(!showFileBrowser)}
-        onDashboardView={() => {
-          setShowTerminal(false);
-          setShowFileBrowser(false);
-        }}
         onExportResults={handleExportResults}
         onOpenReports={handleOpenReports}
       />
-      <div className="flex h-[calc(100vh-64px)] mt-16">
-        <main className="flex-1 overflow-auto">
+      <div className="h-[calc(100vh-64px)] mt-16">
+        <main className="h-full overflow-auto">
           <div
             className={cn(
               "container mx-auto p-6 space-y-6",
@@ -113,71 +105,6 @@ const Home = () => {
             />
           </div>
         </main>
-
-        {/* Side Panels */}
-        {(showTerminal || showFileBrowser) && (
-          <div className="w-[600px] border-l bg-background/95 backdrop-blur-sm">
-            <div className="h-full flex flex-col">
-              <div className="flex items-center justify-between p-4 border-b">
-                <h3 className="font-medium">
-                  {showTerminal && showFileBrowser
-                    ? "Tools"
-                    : showTerminal
-                      ? "Terminal"
-                      : "File Browser"}
-                </h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setShowTerminal(false);
-                    setShowFileBrowser(false);
-                  }}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="flex-1 overflow-hidden">
-                {showTerminal && showFileBrowser ? (
-                  <div className="h-full flex flex-col">
-                    <div className="flex-1 p-4 pb-2 overflow-hidden">
-                      <FileBrowser
-                        onFileSelect={handleFileSelect}
-                        onTestRun={handleTestRun}
-                        onOutputDirSelect={handleOutputDirSelect}
-                        className="h-full"
-                      />
-                    </div>
-                    <div className="flex-1 p-4 pt-2 overflow-hidden">
-                      <Terminal
-                        onCommandExecute={handleCommandExecute}
-                        onTestComplete={handleTestComplete}
-                        className="h-full"
-                      />
-                    </div>
-                  </div>
-                ) : showFileBrowser ? (
-                  <div className="p-4 h-full overflow-hidden">
-                    <FileBrowser
-                      onFileSelect={handleFileSelect}
-                      onTestRun={handleTestRun}
-                      onOutputDirSelect={handleOutputDirSelect}
-                      className="h-full"
-                    />
-                  </div>
-                ) : (
-                  <div className="p-4 h-full overflow-hidden">
-                    <Terminal
-                      onCommandExecute={handleCommandExecute}
-                      onTestComplete={handleTestComplete}
-                      className="h-full"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
