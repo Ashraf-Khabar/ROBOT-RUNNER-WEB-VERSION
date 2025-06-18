@@ -15,12 +15,14 @@ interface TerminalOutput {
 interface TerminalProps {
   onCommandExecute?: (command: string) => void;
   onTestComplete?: (results: any) => void;
+  uploadedFiles?: string[];
   className?: string;
 }
 
 const Terminal = ({
   onCommandExecute = () => {},
   onTestComplete = () => {},
+  uploadedFiles = [],
   className = "",
 }: TerminalProps) => {
   const [command, setCommand] = useState("");
@@ -166,7 +168,23 @@ const Terminal = ({
       return "robotframework==6.1.1\nseleniumlibrary==6.2.0\nrequests==2.31.0\nrequestslibrary==0.9.7";
     }
     if (cmd.includes("ls") || cmd.includes("dir")) {
-      return "test_suites/\n  login_tests.robot\n  api_tests.robot\n  ui_tests.robot\nresources/\n  keywords.robot\n  variables.robot\noutput/\n  output.xml\n  log.html\n  report.html";
+      let baseFiles =
+        "test_suites/\n  login_tests.robot\n  api_tests.robot\n  ui_tests.robot\nresources/\n  keywords.robot\n  variables.robot\noutput/\n  output.xml\n  log.html\n  report.html";
+
+      // Add uploaded files if any
+      const savedUploadedFiles = getCookie("rf-uploaded-files");
+      const uploadedFilesList = savedUploadedFiles
+        ? JSON.parse(savedUploadedFiles)
+        : uploadedFiles;
+
+      if (uploadedFilesList && uploadedFilesList.length > 0) {
+        baseFiles += "\nuploaded_tests/";
+        uploadedFilesList.forEach((file: string) => {
+          baseFiles += `\n  ${file}`;
+        });
+      }
+
+      return baseFiles;
     }
     if (cmd.includes("python --version") || cmd.includes("python3 --version")) {
       return "Python 3.11.0";

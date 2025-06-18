@@ -31,6 +31,7 @@ interface FileBrowserProps {
   onFileSelect?: (file: FileItem) => void;
   onTestRun?: (file: FileItem, outputDir?: string) => void;
   onOutputDirSelect?: (dir: string) => void;
+  onFilesUploaded?: (files: string[]) => void;
   className?: string;
 }
 
@@ -129,6 +130,7 @@ const FileBrowser = ({
   onFileSelect = () => {},
   onTestRun = () => {},
   onOutputDirSelect = () => {},
+  onFilesUploaded = () => {},
   className = "",
 }: FileBrowserProps) => {
   const [files, setFiles] = useState<FileItem[]>(defaultFiles);
@@ -317,9 +319,10 @@ const FileBrowser = ({
     setExpandedFolders((prev) => new Set([...prev, "uploaded-folder"]));
     setUploadedFiles(fileList);
 
-    // Save uploaded file names to cookies
+    // Save uploaded file names to cookies and notify parent
     const fileNames = robotFiles.map((f) => f.name);
     setCookie("rf-uploaded-files", JSON.stringify(fileNames), 30);
+    onFilesUploaded(fileNames);
   };
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -353,9 +356,10 @@ const FileBrowser = ({
       setUploadedFiles(null);
       setSelectedFile(null);
 
-      // Clear from cookies
+      // Clear from cookies and notify parent
       setCookie("rf-uploaded-files", JSON.stringify([]), 30);
       setCookie("rf-selected-file", "", -1); // Delete cookie
+      onFilesUploaded([]);
 
       // Reset file input
       if (fileInputRef.current) {
